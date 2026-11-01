@@ -5,7 +5,7 @@ import { MongoClient } from "mongodb";
 const isProduction = process.env.NODE_ENV === "production";
 const mongoUrl =
   process.env.MONGODB_URL ||
-  (isProduction ? "" : "mongodb://127.0.0.1:27017/techprice-bd");
+  (isProduction ? "" : "mongodb://127.0.0.1:27017/tech-price-db");
 const authSecret =
   process.env.BETTER_AUTH_SECRET ||
   (isProduction ? "" : "local-only-secret-change-before-deploy-0123456789");
@@ -19,7 +19,7 @@ if (!authSecret) {
 }
 
 const mongoClient = new MongoClient(mongoUrl);
-const database = mongoClient.db();
+const database = mongoClient.db(process.env.MONGODB_DATABASE || "tech-price-db");
 const socialProviders = {};
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {

@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# TechPrice BD
 
-## Getting Started
+Bengali-language tech price tracker for Dhaka, powered by the Tech Gadget Dor public API and Better Auth.
 
-First, run the development server:
+## Run locally
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies with `npm install`.
+2. Put local settings in the repository-root `.env` or `.env.local` file. Next.js reads both; `.env.local` takes precedence over `.env`. Do not define an auth key as empty in `.env.local` if it has a value in `.env`.
+3. Configure `MONGODB_URL` with your MongoDB Atlas URI and set `MONGODB_DATABASE=tech-price-db`. Authentication requires a reachable MongoDB instance; the public storefront does not.
+4. Set a private random `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL=http://localhost:3000`.
+5. Add the OAuth values using the exact variable names in `.env.example`, then run `npm run dev` and open `http://localhost:3000`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Never commit `.env` or `.env.local`, and never share OAuth client secrets in chat. Credentials shared outside your password manager should be revoked and replaced.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Google and GitHub OAuth setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create separate OAuth clients for the app. In each provider's OAuth app settings, register the callback URL exactly as follows:
 
-## Learn More
+- Google: `http://localhost:3000/api/auth/callback/google`
+- GitHub: `http://localhost:3000/api/auth/callback/github`
 
-To learn more about Next.js, take a look at the following resources:
+For production, replace `localhost:3000` with the deployed app's HTTPS origin in both the provider settings and `BETTER_AUTH_URL`. After changing environment values, restart the dev server or redeploy so the auth server reads the new values. The client ID and client secret must belong to the same OAuth app.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+If Next.js starts on a different port because port `3000` is already occupied, update `BETTER_AUTH_URL` and the provider callback URL to that actual port, then restart the server.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### OAuth troubleshooting
 
-## Deploy on Vercel
+- **GitHub shows a 404 / “Page not found”:** verify that `GITHUB_CLIENT_ID` belongs to an existing GitHub OAuth App and that its secret is the matching `GITHUB_CLIENT_SECRET`. An app ID that is deleted, mistyped, or from a different app cannot be repaired by changing the sign-in page.
+- **Better Auth shows `invalid_code`:** restart sign-in and complete it once without reusing an old callback URL. Confirm the provider's callback URL matches `BETTER_AUTH_URL` exactly, including the host, port, HTTPS scheme, and `/api/auth/callback/<provider>` path. Also check that the client ID and secret are from the same OAuth app.
+- **Provider button is disabled:** both ID and secret must be set for that provider. Check for empty values in higher-priority `.env.local` or `.env.development.local` files.
+- **Email sign-up/sign-in cannot reach the server:** verify MongoDB is running/reachable and `MONGODB_URL` is valid. User/session data is stored in the `tech-price-db` database.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [`.env.example`](./.env.example). `MONGODB_DATABASE` defaults to `tech-price-db`; OAuth credentials are optional until social sign-in is used. Do not copy real credentials into the example file.
+
+## Scripts
+
+- `npm run dev` — local development
+- `npm run lint` — ESLint
+- `npm run build` — production build
+- `npm start` — serve the production build

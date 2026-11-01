@@ -5,18 +5,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "../lib/auth-client";
 
+function getErrorMessage(error, fallback) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 function SocialButtons({ googleConfigured, githubConfigured }) {
   const [error, setError] = useState("");
 
   async function signIn(provider) {
     setError("");
-    const result = await authClient.signIn.social({
-      provider,
-      callbackURL: "/profile",
-    });
+    try {
+      const result = await authClient.signIn.social({
+        provider,
+        callbackURL: "/profile",
+      });
 
-    if (result.error) {
-      setError(result.error.message || "সোশ্যাল লগইন শুরু করা যায়নি।");
+      if (result.error) {
+        setError(result.error.message || "সোশ্যাল লগইন শুরু করা যায়নি।");
+      }
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "সোশ্যাল লগইন শুরু করা যায়নি।"));
     }
   }
 
@@ -58,21 +66,26 @@ export function SignInForm({ googleConfigured, githubConfigured }) {
     event.preventDefault();
     setError("");
     setPending(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await authClient.signIn.email({
-      email: formData.get("email"),
-      password: formData.get("password"),
-      callbackURL: "/profile",
-    });
-    setPending(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      const result = await authClient.signIn.email({
+        email: formData.get("email"),
+        password: formData.get("password"),
+        callbackURL: "/profile",
+      });
 
-    if (result.error) {
-      setError(result.error.message || "লগইন করা যায়নি। ইমেইল ও পাসওয়ার্ড যাচাই করুন।");
-      return;
+      if (result.error) {
+        setError(result.error.message || "লগইন করা যায়নি। ইমেইল ও পাসওয়ার্ড যাচাই করুন।");
+        return;
+      }
+
+      router.push("/profile");
+      router.refresh();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "লগইন করা যায়নি। আবার চেষ্টা করুন।"));
+    } finally {
+      setPending(false);
     }
-
-    router.push("/profile");
-    router.refresh();
   }
 
   return (
@@ -101,22 +114,27 @@ export function SignUpForm({ googleConfigured, githubConfigured }) {
     event.preventDefault();
     setError("");
     setPending(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await authClient.signUp.email({
-      name: formData.get("name"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-      callbackURL: "/profile",
-    });
-    setPending(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      const result = await authClient.signUp.email({
+        name: formData.get("name"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        callbackURL: "/profile",
+      });
 
-    if (result.error) {
-      setError(result.error.message || "অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।");
-      return;
+      if (result.error) {
+        setError(result.error.message || "অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।");
+        return;
+      }
+
+      router.push("/profile");
+      router.refresh();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।"));
+    } finally {
+      setPending(false);
     }
-
-    router.push("/profile");
-    router.refresh();
   }
 
   return (
@@ -148,20 +166,25 @@ export function ProfileUpdateForm({ name, image }) {
     setError("");
     setSuccess("");
     setPending(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await authClient.updateUser({
-      name: formData.get("name"),
-      image: formData.get("image") || null,
-    });
-    setPending(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      const result = await authClient.updateUser({
+        name: formData.get("name"),
+        image: formData.get("image") || null,
+      });
 
-    if (result.error) {
-      setError(result.error.message || "প্রোফাইল আপডেট করা যায়নি।");
-      return;
+      if (result.error) {
+        setError(result.error.message || "প্রোফাইল আপডেট করা যায়নি।");
+        return;
+      }
+
+      setSuccess("আপনার প্রোফাইল আপডেট হয়েছে।");
+      router.refresh();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "প্রোফাইল আপডেট করা যায়নি।"));
+    } finally {
+      setPending(false);
     }
-
-    setSuccess("আপনার প্রোফাইল আপডেট হয়েছে।");
-    router.refresh();
   }
 
   return (
@@ -183,13 +206,17 @@ export function SignOutButton() {
 
   async function handleSignOut() {
     setError("");
-    const result = await authClient.signOut();
-    if (result.error) {
-      setError(result.error.message || "লগআউট করা যায়নি।");
-      return;
+    try {
+      const result = await authClient.signOut();
+      if (result.error) {
+        setError(result.error.message || "লগআউট করা যায়নি।");
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "লগআউট করা যায়নি।"));
     }
-    router.push("/");
-    router.refresh();
   }
 
   return (
