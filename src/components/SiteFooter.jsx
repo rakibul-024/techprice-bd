@@ -1,13 +1,26 @@
 import Link from "next/link";
-import { categories } from "../lib/categories";
+import { getCategories } from "../lib/api";
+import { categories as fallbackCategories } from "../lib/categories";
 
-export default function SiteFooter() {
+async function loadCategories() {
+  try {
+    const liveCategories = await getCategories();
+    if (liveCategories.length) return liveCategories;
+  } catch {
+    // ফিড আসতে না পারলে স্থানীয় ক্যাটাগরি তালিকা দেখানো হবে
+  }
+  return fallbackCategories;
+}
+
+export default async function SiteFooter() {
+  const categories = await loadCategories();
+
   return (
     <footer className="site-footer">
       <div className="shell footer-grid">
         <div className="footer-about">
           <Link className="brand footer-brand" href="/">
-            <span className="brand-mark" aria-hidden="true">▤</span>
+            <span aria-hidden="true" className="brand-mark">▤</span>
             <strong>টেকপ্রাইস <em>বিডি</em></strong>
           </Link>
           <p>ঢাকার প্রযুক্তি বাজারের সর্বশেষ দর, এক জায়গায়—সহজে তুলনা করুন, বুঝে কিনুন।</p>

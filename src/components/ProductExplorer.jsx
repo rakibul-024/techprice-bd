@@ -4,6 +4,16 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import ProductCard from "./ProductCard";
 
+const SUB_FILTERS = [
+  { label: "সব", pattern: null },
+  { label: "ইন্টেল", pattern: /intel|ইন্টেল/i },
+  { label: "এএমডি", pattern: /amd|ryzen|রাইজেন|athlon| Radeon|\brx\b/i },
+  { label: "এনভিডিয়া", pattern: /nvidia|geforce|এনভিডিয়া/i },
+  { label: "গেমিং", pattern: /gaming|গেমিং|rog|hyperx|razer|fantech/i },
+  { label: "স্যামসাং", pattern: /samsung|স্যামসাং/i },
+  { label: "এপল", pattern: /apple|iphone|macbook|এপল|আইফোন/i },
+];
+
 export default function ProductExplorer({
   products,
   categories,
@@ -13,15 +23,34 @@ export default function ProductExplorer({
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [sortOrder, setSortOrder] = useState("featured");
   const [query, setQuery] = useState(initialQuery);
+  const [subFilter, setSubFilter] = useState("সব");
+
+  const visibleSubFilters = useMemo(() => {
+    return SUB_FILTERS.filter((filter) => {
+      if (!filter.pattern) return true;
+      return products.some((product) => {
+        const searchable = `${product.name} ${product.englishName || ""} ${product.category}`;
+        return filter.pattern.test(searchable);
+      });
+    });
+  }, [products]);
 
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
+    const activeFilter = SUB_FILTERS.find((filter) => filter.label === subFilter);
     const filtered = products.filter((product) => {
       const matchesCategory =
         selectedCategory === "all" || product.categorySlug === selectedCategory;
       const searchable = `${product.name} ${product.englishName || ""} ${product.category}`
         .toLocaleLowerCase();
-      return matchesCategory && (!normalizedQuery || searchable.includes(normalizedQuery));
+      const matchesSubFilter =
+        !activeFilter?.pattern ||
+        activeFilter.pattern.test(`${product.name} ${product.englishName || ""} ${product.category}`);
+      return (
+        matchesCategory &&
+        matchesSubFilter &&
+        (!normalizedQuery || searchable.includes(normalizedQuery))
+      );
     });
 
     if (sortOrder === "lowToHigh") {
@@ -31,7 +60,7 @@ export default function ProductExplorer({
     }
 
     return filtered;
-  }, [products, query, selectedCategory, sortOrder]);
+  }, [products, query, selectedCategory, sortOrder, subFilter]);
 
   return (
     <div>
@@ -68,13 +97,30 @@ export default function ProductExplorer({
           <label className="sort-select">
             <span className="sr-only">দাম অনুসারে সাজান</span>
             <select onChange={(event) => setSortOrder(event.target.value)} value={sortOrder}>
-              <option value="featured">জনপ্রিয়তা</option>
-              <option value="lowToHigh">দাম: কম থেকে বেশি</option>
-              <option value="highToLow">দাম: বেশি থেকে কম</option>
+              <option value="featured">ডিফল্ট রেট</option>
+              <option value="lowToHigh">দাম: কম থেকে বেশি ↑</option>
+              <option value="highToLow">দাম: বেশি থেকে কম ↓</option>
             </select>
           </label>
         </div>
       </div>
+      {visibleSubFilters.length > 1 ? (
+        <div aria-label="সাব-ফিল্টার" className="subfilter-row">
+          <span className="subfilter-label">দ্রুত ফিল্টার</span>
+          <div className="filter-chips subfilter-chips">
+            {visibleSubFilters.map((filter) => (
+              <button
+                className={subFilter === filter.label ? "filter-chip active" : "filter-chip"}
+                key={filter.label}
+                onClick={() => setSubFilter(filter.label)}
+                type="button"
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {visibleProducts.length ? (
         <div className="product-grid">
           {visibleProducts.map((product) => (
@@ -91,6 +137,7 @@ export default function ProductExplorer({
             onClick={() => {
               setQuery("");
               setSelectedCategory("all");
+              setSubFilter("সব");
             }}
             type="button"
           >

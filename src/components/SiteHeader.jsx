@@ -1,12 +1,32 @@
 import Link from "next/link";
-import { categories } from "../lib/categories";
+import { getCategories } from "../lib/api";
+import { categories as fallbackCategories } from "../lib/categories";
+import UserMenu from "./UserMenu";
 
-export default function SiteHeader() {
+async function loadCategories() {
+  try {
+    const liveCategories = await getCategories();
+    if (liveCategories.length) return liveCategories;
+  } catch {
+    // ফিড আসতে না পারলে স্থানীয় ক্যাটাগরি তালিকা দেখানো হবে
+  }
+  return fallbackCategories;
+}
+
+export default async function SiteHeader({ currentUser = null, sessionKnown = false }) {
+  const categories = await loadCategories();
+  const todayBn = new Date().toLocaleDateString("bn-BD", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <header className="site-header">
       <div className="header-main shell">
         <Link className="brand" href="/" aria-label="TechPrice BD হোম">
-          <span className="brand-mark" aria-hidden="true">
+          <span aria-hidden="true" className="brand-mark">
             ▤
           </span>
           <span>
@@ -15,26 +35,26 @@ export default function SiteHeader() {
             </strong>
             <small>ঢাকার প্রযুক্তি বাজারের নির্ভরযোগ্য দর</small>
           </span>
-          <span className="live-badge"><i /> LIVE</span>
+          <span className="brand-status">
+            <span className="live-badge"><i /> লাইভ</span>
+            <span className="header-date">{todayBn}</span>
+          </span>
         </Link>
 
-        <form className="header-search" action="/" role="search">
+        <form action="/" className="header-search" role="search">
           <span aria-hidden="true">⌕</span>
           <input
-            type="search"
+            aria-label="পণ্য খুঁজুন"
             name="q"
             placeholder="প্রসেসর, GPU, ফোন বা গ্যাজেট খুঁজুন..."
-            aria-label="পণ্য খুঁজুন"
+            type="search"
           />
-          <button type="submit" aria-label="খুঁজুন">↵</button>
+          <button aria-label="খুঁজুন" type="submit">↵</button>
         </form>
 
-        <div className="header-actions">
-          <Link className="text-link" href="/signin">লগইন</Link>
-          <Link className="button button-primary button-small" href="/signup">নিবন্ধন</Link>
-        </div>
+        <UserMenu initialUser={currentUser} sessionKnown={sessionKnown} />
       </div>
-      <nav className="category-nav shell" aria-label="ক্যাটাগরি">
+      <nav aria-label="ক্যাটাগরি" className="category-nav shell">
         <Link className="nav-all" href="/#all-products">🏠 সব পণ্য</Link>
         {categories.map((category) => (
           <Link href={`/category/${category.slug}`} key={category.slug}>

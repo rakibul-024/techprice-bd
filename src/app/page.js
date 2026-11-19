@@ -99,12 +99,32 @@ function Hero({ categories, products, risers }) {
   );
 }
 
-function MarketPulse({ productCount, categoryCount, riserCount, fallerCount }) {
+function MarketPulse({ productCount, riserCount, fallerCount, cheapest }) {
   const cards = [
-    { icon: "↗", label: "দাম বাড়ছে", value: `${riserCount}টি পণ্য`, tone: "pulse-up" },
-    { icon: "↘", label: "দাম কমছে", value: `${fallerCount}টি পণ্য`, tone: "pulse-down" },
-    { icon: "▦", label: "লাইভ ক্যাটালগ", value: `${productCount.toLocaleString("bn-BD")}টি পণ্য`, tone: "pulse-purple" },
-    { icon: "✓", label: "ক্যাটাগরি", value: `${categoryCount.toLocaleString("bn-BD")}টি বিভাগ`, tone: "pulse-blue" },
+    {
+      icon: "↗",
+      label: "মার্কেট মুভার্স",
+      value: `${(riserCount + fallerCount).toLocaleString("bn-BD")}টি পণ্যের দাম বদলেছে`,
+      tone: "pulse-up",
+    },
+    {
+      icon: "৳",
+      label: "দিনের সেরা ডিল",
+      value: cheapest ? `সর্বনিম্ন ${cheapest.todayPriceBn}` : "লাইভ রেট দেখুন",
+      tone: "pulse-purple",
+    },
+    {
+      icon: "★",
+      label: "ভেরিফাইড শপস",
+      value: "স্টার টেক · রায়ান্স · আইডিবি · মাল্টিপ্ল্যান",
+      tone: "pulse-blue",
+    },
+    {
+      icon: "✓",
+      label: "১০০% ডেটা গ্যারান্টি",
+      value: `${productCount.toLocaleString("bn-BD")}টি পণ্য যাচাই করা`,
+      tone: "pulse-down",
+    },
   ];
 
   return (
@@ -113,7 +133,7 @@ function MarketPulse({ productCount, categoryCount, riserCount, fallerCount }) {
         <div className="pulse-card" key={card.label}>
           <span className={`pulse-card-icon ${card.tone}`}>{card.icon}</span>
           <span><small>{card.label}</small><strong>{card.value}</strong></span>
-          <span className="pulse-arrow" aria-hidden="true">→</span>
+          <span aria-hidden="true" className="pulse-arrow">→</span>
         </div>
       ))}
     </section>
@@ -130,13 +150,17 @@ export default async function Home({ searchParams }) {
     getFallers(),
   ]);
   const availableCategories = categories.length ? categories : categoryFallback;
-  const topProducts = [...products].sort((a, b) => a.todayPrice - b.todayPrice);
+  const cheapest = products.reduce(
+    (lowest, product) =>
+      !lowest || product.todayPrice < lowest.todayPrice ? product : lowest,
+    null,
+  );
 
   return (
     <>
       <Hero categories={availableCategories} products={products} risers={risers} />
       <MarketPulse
-        categoryCount={categories.length}
+        cheapest={cheapest}
         fallerCount={fallers.length}
         productCount={products.length}
         riserCount={risers.length}

@@ -77,15 +77,16 @@ export default async function ProductPage({ params }) {
           {shops.length ? (
             <div className="table-wrap">
               <table className="data-table">
-                <thead><tr><th>দোকান</th><th>শাখা</th><th>সর্বনিম্ন</th><th>আজকের দাম</th><th>সর্বোচ্চ</th><th>স্টক</th></tr></thead>
+                <thead><tr><th>দোকান</th><th>শাখা</th><th>সর্বনিম্ন</th><th>গড় দাম</th><th>সর্বোচ্চ</th><th>আজকের দাম</th><th>স্টক</th></tr></thead>
                 <tbody>
                   {shops.map((shop, index) => (
                     <tr key={`${shop.shopName}-${shop.branch}-${index}`}>
                       <td><strong>{shop.shopName}</strong></td>
                       <td>{shop.branch || "—"}</td>
                       <td>{shop.min || "—"}</td>
-                      <td className="table-price">{shop.today || shop.avg || "—"}</td>
+                      <td>{shop.avg || shop.today || "—"}</td>
                       <td>{shop.max || "—"}</td>
+                      <td className="table-price">{shop.today || shop.avg || "—"}</td>
                       <td><span className="stock-status">{shop.status || "দাম যাচাই করুন"}</span></td>
                     </tr>
                   ))}
