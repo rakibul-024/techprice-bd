@@ -23,6 +23,8 @@ For production, set `BETTER_AUTH_URL=https://techprice-bd.vercel.app` in Vercel 
 
 For production, register `https://techprice-bd.vercel.app/api/auth/callback/google` and `https://techprice-bd.vercel.app/api/auth/callback/github` with the corresponding providers. GitHub OAuth Apps have a single callback URL, so use separate local and production GitHub OAuth Apps if you need both environments.
 
+Google and GitHub are trusted account-link providers so linking can work when a provider omits its verified-email flag. Linking still requires the provider email to match the TechPrice BD account; different emails are rejected.
+
 Keep each OAuth attempt on the same origin from start to finish. Do not start sign-in on `techprice-bd.vercel.app` and return to `localhost:3000`, or vice versa; the OAuth state cookie is host-specific and that produces `state_mismatch`. Locally, if Next.js starts on a different port because port `3000` is occupied, the app accepts localhost ports dynamically; register the actual callback URL with the local OAuth app.
 
 ### OAuth troubleshooting
@@ -30,7 +32,8 @@ Keep each OAuth attempt on the same origin from start to finish. Do not start si
 - **GitHub shows a 404 / “Page not found”:** verify that `GITHUB_CLIENT_ID` belongs to an existing GitHub OAuth App and that its secret is the matching `GITHUB_CLIENT_SECRET`. An app ID that is deleted, mistyped, or from a different app cannot be repaired by changing the sign-in page.
 - **The sign-in form shows `Invalid origin` on Vercel:** redeploy the latest app version and set Vercel's `BETTER_AUTH_URL` to `https://techprice-bd.vercel.app`. Confirm the request is made from the deployed site, not a localhost tab.
 - **Better Auth shows `invalid_code`:** restart sign-in and complete it once without reusing an old callback URL. Confirm the provider's callback URL matches `BETTER_AUTH_URL` exactly, including the host, port, HTTPS scheme, and `/api/auth/callback/<provider>` path. Also check that the client ID and secret are from the same OAuth app.
-- **Better Auth shows `account_not_linked`:** log in with the method originally used for that email (for example, email and password). In `/profile`, use **সোশ্যাল লগইন সংযুক্ত করুন** and explicitly connect Google or GitHub. This avoids silently attaching an unverified email account to a social identity.
+- **Better Auth shows `account_not_linked`:** log in with the method originally used for that email (for example, email and password). In `/profile`, use **সোশ্যাল লগইন সংযুক্ত করুন** and explicitly connect Google or GitHub using the same email address.
+- **Better Auth shows `unable_to_link_account`:** log in with the account's existing method and retry from `/profile`. Confirm the provider account is not already connected to a different TechPrice BD account and that its email matches the signed-in account.
 - **Provider button is disabled:** both ID and secret must be set for that provider. Check for empty values in higher-priority `.env.local` or `.env.development.local` files.
 - **Email sign-up/sign-in cannot reach the server:** verify MongoDB is running/reachable and `MONGODB_URL` is valid. User/session data is stored in the `tech-price-db` database.
 
