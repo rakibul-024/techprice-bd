@@ -226,3 +226,72 @@ export function SignOutButton() {
     </div>
   );
 }
+
+export function SocialAccountLinks({ googleConfigured, githubConfigured }) {
+  const [pendingProvider, setPendingProvider] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  async function linkProvider(provider) {
+    setPendingProvider(provider);
+    setError("");
+    setSuccess("");
+
+    try {
+      const result = await authClient.linkSocial({
+        provider,
+        callbackURL: "/profile",
+      });
+
+      if (result.error) {
+        setError(result.error.message || "সোশ্যাল অ্যাকাউন্ট সংযুক্ত করা যায়নি।");
+        setPendingProvider("");
+        return;
+      }
+
+      setSuccess("প্রোভাইডারে অনুমতি দিন; ফিরে এলে অ্যাকাউন্ট সংযুক্ত হবে।");
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "সোশ্যাল অ্যাকাউন্ট সংযুক্ত করা যায়নি।"));
+      setPendingProvider("");
+    }
+  }
+
+  const providers = [
+    { id: "google", label: "Google", configured: googleConfigured },
+    { id: "github", label: "GitHub", configured: githubConfigured },
+  ];
+
+  return (
+    <section className="account-link-section">
+      <div>
+        <h2>সোশ্যাল লগইন সংযুক্ত করুন</h2>
+        <p>
+          একই ইমেইলে আগে অ্যাকাউন্ট তৈরি থাকলে প্রথমে সেই পদ্ধতিতে লগইন করে
+          এখানে provider সংযুক্ত করুন।
+        </p>
+      </div>
+      <div className="account-link-actions">
+        {providers.map((provider) => (
+          <button
+            className="button button-outline"
+            disabled={!provider.configured || Boolean(pendingProvider)}
+            key={provider.id}
+            onClick={() => linkProvider(provider.id)}
+            type="button"
+          >
+            {pendingProvider === provider.id
+              ? `${provider.label} খুলছে...`
+              : `${provider.label} সংযুক্ত করুন`}
+          </button>
+        ))}
+      </div>
+      {error ? <p className="form-message form-error" role="alert">{error}</p> : null}
+      {success ? <p className="form-message form-success" role="status">{success}</p> : null}
+      {providers.some((provider) => !provider.configured) ? (
+        <p className="account-link-note">
+          কোনো বাটন নিষ্ক্রিয় থাকলে ওই provider-এর OAuth credentials server environment-এ যোগ করুন।
+        </p>
+      ) : null}
+    </section>
+  );
+}

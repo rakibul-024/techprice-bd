@@ -40,6 +40,15 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   secret: authSecret,
   database: mongodbAdapter(database, { client: mongoClient, transaction: false }),
+  account: {
+    accountLinking: {
+      enabled: true,
+      allowDifferentEmails: false,
+    },
+  },
+  onAPIError: {
+    errorURL: "/auth/error",
+  },
   emailAndPassword: {
     enabled: true,
   },

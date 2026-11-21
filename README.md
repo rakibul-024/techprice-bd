@@ -27,8 +27,13 @@ If Next.js starts on a different port because port `3000` is already occupied, u
 
 - **GitHub shows a 404 / “Page not found”:** verify that `GITHUB_CLIENT_ID` belongs to an existing GitHub OAuth App and that its secret is the matching `GITHUB_CLIENT_SECRET`. An app ID that is deleted, mistyped, or from a different app cannot be repaired by changing the sign-in page.
 - **Better Auth shows `invalid_code`:** restart sign-in and complete it once without reusing an old callback URL. Confirm the provider's callback URL matches `BETTER_AUTH_URL` exactly, including the host, port, HTTPS scheme, and `/api/auth/callback/<provider>` path. Also check that the client ID and secret are from the same OAuth app.
+- **Better Auth shows `account_not_linked`:** log in with the method originally used for that email (for example, email and password). In `/profile`, use **সোশ্যাল লগইন সংযুক্ত করুন** and explicitly connect Google or GitHub. This avoids silently attaching an unverified email account to a social identity.
 - **Provider button is disabled:** both ID and secret must be set for that provider. Check for empty values in higher-priority `.env.local` or `.env.development.local` files.
 - **Email sign-up/sign-in cannot reach the server:** verify MongoDB is running/reachable and `MONGODB_URL` is valid. User/session data is stored in the `tech-price-db` database.
+
+The ticker initially renders live API data, refreshes it every 60 seconds through the same-origin `/api/market/ticker` route, and keeps the last successful rates visible if a refresh fails. When the OS requests reduced motion, the ticker starts paused; use its play button to enable scrolling explicitly.
+
+The Next.js security insight shown by older dev processes is addressed by the patched Next.js and `eslint-config-next` version in `package.json`. Stop and restart `npm run dev` after installing dependencies so the process no longer uses the old version.
 
 ## Environment variables
 

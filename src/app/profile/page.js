@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { SignOutButton } from "../../components/AuthForms";
+import { SignOutButton, SocialAccountLinks } from "../../components/AuthForms";
 import { auth } from "../../lib/auth";
 
 export const metadata = { title: "আমার প্রোফাইল | TechPrice BD" };
@@ -38,6 +38,10 @@ export default async function ProfilePage() {
           <Link className="button button-primary" href="/profile/update">প্রোফাইল আপডেট</Link>
           <SignOutButton />
         </div>
+        <SocialAccountLinks
+          googleConfigured={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)}
+          githubConfigured={Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET)}
+        />
       </div>
     </section>
   );
